@@ -376,25 +376,25 @@ class NewEdXPageExtractor(CurrentEdXPageExtractor):
 
         def _get_section_name(section_soup):  # FIXME: Extract from here and test
             try:
-                return section_soup.button.h3.string.strip()
+                return section_soup.div.h3.string.strip()
             except AttributeError:
                 return None
 
         def _make_subsections(section_soup):
             try:
-                subsections_soup = section_soup.select("li.vertical.outline-item.focusable")
+                subsections_soup = section_soup.find_all('li', class_=['subsection'])
             except AttributeError:
                 return []
             # FIXME correct extraction of subsection.name (unicode)
             subsections = [SubSection(position=i,
                                       url=s.a['href'],
-                                      name=s.a.div.div.string.strip())
+                                      name=s.a.div.span.string.strip())
                            for i, s in enumerate(subsections_soup, 1)]
 
             return subsections
 
         soup = BeautifulSoup(page)
-        sections_soup = soup.select("li.outline-item.section")
+        sections_soup = soup.find_all('li', class_=['outline-item focusable section'])
 
         sections = [Section(position=i,
                             name=_get_section_name(section_soup),
@@ -414,12 +414,12 @@ def get_page_extractor(url):
     """
     if (
         url.startswith('https://courses.edx.org') or
+        url.startswith('https://lagunita.stanford.edu') or
         url.startswith('https://mitxpro.mit.edu')
     ):
         return NewEdXPageExtractor()
     elif (
         url.startswith('https://edge.edx.org') or
-        url.startswith('https://lagunita.stanford.edu') or
         url.startswith('https://www.fun-mooc.fr')
     ):
         return CurrentEdXPageExtractor()
